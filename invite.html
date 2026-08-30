@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Set Your Password — Elite Plan Markup</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#080d18;--surf:#0f1624;--surf2:#162030;--bdr:#1e2d45;--bdr2:#243450;--acc:#1d6fdb;--acc2:#38bdf8;--txt:#e2e8f4;--txt2:#7a8fac;--txt3:#3a4f6a;--red:#ef4444;--grn:#22c55e;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.015) 39px,rgba(255,255,255,.015) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.015) 39px,rgba(255,255,255,.015) 40px);pointer-events:none;}
+.card{background:var(--surf);border:1px solid var(--bdr2);border-radius:16px;padding:36px;width:100%;max-width:400px;position:relative;}
+.card::before{content:'';position:absolute;top:0;left:24px;right:24px;height:2px;background:linear-gradient(90deg,transparent,var(--acc),var(--acc2),transparent);border-radius:0 0 2px 2px;}
+.brand{text-align:center;margin-bottom:28px;}
+.brand img{height:48px;width:auto;object-fit:contain;margin-bottom:12px;}
+.brand h1{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--txt2);}
+.brand .sub{font-size:13px;color:var(--txt3);margin-top:4px;}
+.welcome{background:rgba(29,111,219,.08);border:1px solid rgba(29,111,219,.2);border-radius:8px;padding:12px 14px;margin-bottom:20px;font-size:13px;color:var(--acc2);line-height:1.5;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:11px;font-weight:600;letter-spacing:1px;color:var(--txt2);text-transform:uppercase;margin-bottom:5px;}
+.field input{width:100%;padding:10px 14px;background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .14s;}
+.field input:focus{border-color:var(--acc);}
+.field input::placeholder{color:var(--txt3);}
+.strength{height:3px;border-radius:2px;margin-top:6px;background:var(--bdr);overflow:hidden;}
+.strength-bar{height:100%;border-radius:2px;transition:width .2s,background .2s;width:0;}
+.strength-lbl{font-size:10px;color:var(--txt3);margin-top:3px;}
+.btn{width:100%;padding:12px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .14s;margin-top:4px;background:linear-gradient(135deg,#1d6fdb,#38bdf8);color:#fff;box-shadow:0 4px 20px rgba(29,111,219,.3);}
+.btn:hover{filter:brightness(1.08);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;padding:8px 12px;font-size:12px;color:#fca5a5;margin-bottom:12px;display:none;}
+.error.show{display:block;}
+.success{text-align:center;display:none;}
+.success-icon{font-size:48px;margin-bottom:16px;}
+.success h2{font-size:20px;font-weight:700;margin-bottom:8px;}
+.success p{font-size:13px;color:var(--txt2);line-height:1.6;margin-bottom:20px;}
+.success a{display:block;padding:12px;border-radius:8px;background:linear-gradient(135deg,#1d6fdb,#38bdf8);color:#fff;text-decoration:none;font-weight:600;font-size:14px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand">
+    <img src="https://elitesmarthome.com/wp-content/uploads/2019/01/unnamed-26.png" onerror="this.style.display='none'">
+    <h1>PLAN MARKUP</h1>
+    <div class="sub">Elite Smart Home</div>
+  </div>
+
+  <div id="form-view">
+    <div class="welcome" id="welcome-msg">You've been invited to Elite Plan Markup. Set a password to activate your account.</div>
+    <div class="error" id="err"></div>
+    <div class="field">
+      <label>Your Name</label>
+      <input type="text" id="full-name" placeholder="First and last name" autocomplete="name">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="pass" placeholder="Choose a strong password" oninput="checkStrength(this.value)">
+      <div class="strength"><div class="strength-bar" id="str-bar"></div></div>
+      <div class="strength-lbl" id="str-lbl"></div>
+    </div>
+    <div class="field">
+      <label>Confirm Password</label>
+      <input type="password" id="pass2" placeholder="Confirm your password" onkeydown="if(event.key==='Enter')activate()">
+    </div>
+    <button class="btn" id="act-btn" onclick="activate()">Activate Account</button>
+  </div>
+
+  <div class="success" id="success-view">
+    <div class="success-icon">🎉</div>
+    <h2>You're all set!</h2>
+    <p>Your Elite Plan Markup account is activated. You can now log in and start marking up plans.</p>
+    <a href="index.html">Go to Sign In</a>
+  </div>
+</div>
+
+<script>
+const sb = supabase.createClient('https://lckdjkildekbjlsllybh.supabase.co','sb_publishable_zqMJbNn1pbZvdqCrwGrSoQ_x0DHar3b');
+
+// Handle the auth callback from the invite link
+async function init() {
+  // Supabase puts tokens in the URL hash for magic links and password resets
+  const hash = window.location.hash;
+  const params = new URLSearchParams(hash.slice(1));
+  const accessToken  = params.get('access_token');
+  const refreshToken = params.get('refresh_token');
+  const type         = params.get('type'); // 'recovery' for reset, 'magiclink' for OTP
+
+  let user = null;
+
+  if (accessToken) {
+    // Set the session from the URL tokens
+    const { data, error } = await sb.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken || ''
+    });
+    if (!error && data?.user) {
+      user = data.user;
+    } else if (error) {
+      showErr('Invalid or expired invite link. Please ask for a new invite.');
+      console.warn('Session error:', error.message);
+      return;
+    }
+  } else {
+    // No hash tokens — check existing session
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) user = session.user;
+  }
+
+  if (user) {
+    document.getElementById('welcome-msg').textContent =
+      `Welcome to Elite Plan Markup! You're signing up as ${user.email}. Set your name and password to activate your account.`;
+    // Pre-fill name from invite record or user metadata
+    const { data: invite } = await sb.from('markup_invites').select('full_name').eq('email', user.email).maybeSingle();
+    const savedName = invite?.full_name || user.user_metadata?.full_name || '';
+    if (savedName) document.getElementById('full-name').value = savedName;
+  } else {
+    showErr('No active session found. Please use the link from your invite email.');
+  }
+}
+
+function checkStrength(p) {
+  const bar = document.getElementById('str-bar');
+  const lbl = document.getElementById('str-lbl');
+  let score = 0;
+  if (p.length >= 8)  score++;
+  if (p.length >= 12) score++;
+  if (/[A-Z]/.test(p)) score++;
+  if (/[0-9]/.test(p)) score++;
+  if (/[^A-Za-z0-9]/.test(p)) score++;
+  const colors = ['#ef4444','#f97316','#f0a500','#22c55e','#38bdf8'];
+  const labels = ['Too short','Weak','Fair','Strong','Very strong'];
+  const pct = Math.min(100, score * 20);
+  bar.style.width = pct + '%';
+  bar.style.background = colors[score-1] || '#1e2d45';
+  lbl.textContent = p.length > 0 ? labels[score-1] || '' : '';
+}
+
+async function activate() {
+  const name  = document.getElementById('full-name').value.trim();
+  const pass  = document.getElementById('pass').value;
+  const pass2 = document.getElementById('pass2').value;
+  const btn   = document.getElementById('act-btn');
+  clearErr();
+  if (!name)             { showErr('Please enter your full name.'); return; }
+  if (pass.length < 8)   { showErr('Password must be at least 8 characters.'); return; }
+  if (pass !== pass2)    { showErr('Passwords do not match.'); return; }
+
+  btn.disabled = true; btn.textContent = 'Activating...';
+
+  try {
+    // Update password
+    const { error: pwErr } = await sb.auth.updateUser({ password: pass });
+    if (pwErr) throw pwErr;
+
+    // Update name and status in markup_users
+    const { data: { user } } = await sb.auth.getUser();
+    if (user) {
+      await sb.auth.updateUser({ data: { full_name: name } });
+      // Get existing role from markup_users (set by admin when invited)
+      const { data: existingUser } = await sb.from('markup_users').select('id, role').eq('id', user.id).maybeSingle();
+      const role = existingUser?.role || 'tech';
+      if (!existingUser) {
+        await sb.from('markup_users').insert({
+          id: user.id,
+          email: user.email,
+          full_name: name,
+          role: 'tech',
+          status: 'active'
+        });
+      } else {
+        await sb.from('markup_users').update({ full_name: name, status: 'active' }).eq('id', user.id);
+      }
+    }
+
+    document.getElementById('form-view').style.display = 'none';
+    document.getElementById('success-view').style.display = 'block';
+  } catch(e) {
+    showErr(e.message || 'Failed to activate account.');
+    btn.disabled = false; btn.textContent = 'Activate Account';
+  }
+}
+
+function showErr(m) { const e=document.getElementById('err'); e.textContent=m; e.classList.add('show'); }
+function clearErr()  { document.getElementById('err').classList.remove('show'); }
+
+init();
+</script>
+</body>
+</html>

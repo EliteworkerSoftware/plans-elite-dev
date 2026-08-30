@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elite Plan Markup — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#080d18;--surf:#0f1624;--surf2:#162030;--bdr:#1e2d45;--bdr2:#243450;
+  --acc:#1d6fdb;--acc2:#38bdf8;--txt:#e2e8f4;--txt2:#7a8fac;--txt3:#3a4f6a;
+  --red:#ef4444;--grn:#22c55e;--gold:#f0a500;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.012) 39px,rgba(255,255,255,.012) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.012) 39px,rgba(255,255,255,.012) 40px);pointer-events:none;z-index:0;}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:var(--surf);border-bottom:1px solid var(--bdr);display:flex;align-items:center;padding:0 24px;height:52px;gap:16px;}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nav-logo img{height:28px;width:auto;}
+.nav-logo span{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--txt2);}
+.nav-sep{flex:1;}
+.nav-badge{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--acc2);background:rgba(29,111,219,.15);border:1px solid rgba(56,189,248,.2);border-radius:20px;padding:3px 10px;}
+.nav-link{font-size:12px;color:var(--txt2);text-decoration:none;padding:5px 10px;border-radius:6px;transition:all .12s;}
+.nav-link:hover{background:var(--surf2);color:var(--txt);}
+.nav-link.active{color:var(--acc2);}
+.nav-signout{font-size:11px;color:var(--txt3);cursor:pointer;padding:4px 10px;border-radius:5px;background:transparent;border:1px solid var(--bdr);transition:all .12s;}
+.nav-signout:hover{border-color:var(--red);color:var(--red);}
+
+/* LAYOUT */
+main{max-width:1100px;margin:0 auto;padding:32px 24px;position:relative;z-index:1;}
+.page-header{margin-bottom:28px;}
+.page-header h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--txt);margin-bottom:4px;}
+.page-header p{font-size:13px;color:var(--txt2);}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:28px;}
+.stat{background:var(--surf);border:1px solid var(--bdr);border-radius:10px;padding:16px 18px;}
+.stat-val{font-size:28px;font-weight:700;color:var(--txt);font-family:'DM Mono',monospace;line-height:1;}
+.stat-lbl{font-size:11px;color:var(--txt3);margin-top:4px;letter-spacing:.5px;}
+.stat.accent{border-color:rgba(29,111,219,.4);background:rgba(29,111,219,.06);}
+.stat.accent .stat-val{color:var(--acc2);}
+
+/* CARD */
+.card{background:var(--surf);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;}
+.card-head{padding:16px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.card-head h2{font-size:14px;font-weight:600;color:var(--txt);}
+
+/* INVITE FORM */
+.invite-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.invite-row input{flex:1;min-width:200px;padding:9px 12px;background:var(--surf2);border:1px solid var(--bdr2);border-radius:7px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .12s;}
+.invite-row input:focus{border-color:var(--acc);}
+.invite-row input::placeholder{color:var(--txt3);}
+select.role-sel{padding:9px 12px;background:var(--surf2);border:1px solid var(--bdr2);border-radius:7px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;cursor:pointer;}
+.btn{padding:9px 18px;border-radius:7px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .12s;white-space:nowrap;}
+.btn-primary{background:linear-gradient(135deg,#1d6fdb,#38bdf8);color:#fff;box-shadow:0 2px 12px rgba(29,111,219,.3);}
+.btn-primary:hover{filter:brightness(1.1);}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+.btn-ghost{background:transparent;border:1px solid var(--bdr2);color:var(--txt2);}
+.btn-ghost:hover{border-color:var(--acc);color:var(--acc2);}
+.btn-danger{background:transparent;border:1px solid rgba(239,68,68,.3);color:var(--red);}
+.btn-danger:hover{background:rgba(239,68,68,.1);}
+.btn-sm{padding:5px 12px;font-size:11px;border-radius:5px;}
+
+/* TABLE */
+.user-table{width:100%;border-collapse:collapse;}
+.user-table th{padding:10px 16px;text-align:left;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--txt3);border-bottom:1px solid var(--bdr);}
+.user-table td{padding:12px 16px;border-bottom:1px solid rgba(30,45,69,.5);font-size:13px;vertical-align:middle;}
+.user-table tr:last-child td{border-bottom:none;}
+.user-table tr:hover td{background:rgba(255,255,255,.02);}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--acc2));display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;}
+.user-info{display:flex;align-items:center;gap:10px;}
+.user-name{font-weight:600;color:var(--txt);}
+.user-email{font-size:11px;color:var(--txt3);}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.badge-admin{background:rgba(240,165,0,.15);color:var(--gold);border:1px solid rgba(240,165,0,.25);}
+.badge-staff{background:rgba(56,189,248,.12);color:var(--acc2);border:1px solid rgba(56,189,248,.2);}
+.badge-pending{background:rgba(122,143,172,.12);color:var(--txt2);border:1px solid var(--bdr);}
+.badge-active{background:rgba(34,197,94,.12);color:var(--grn);border:1px solid rgba(34,197,94,.2);}
+.badge-inactive{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2);}
+.actions{display:flex;gap:6px;justify-content:flex-end;}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surf);border:1px solid var(--bdr2);border-radius:8px;padding:10px 18px;font-size:13px;color:var(--txt);box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:9999;display:none;white-space:nowrap;}
+#toast.show{display:block;}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-bg.show{display:flex;}
+.modal{background:var(--surf);border:1px solid var(--bdr2);border-radius:14px;padding:28px;max-width:420px;width:92%;box-shadow:0 24px 80px rgba(0,0,0,.5);}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:8px;}
+.modal p{font-size:13px;color:var(--txt2);line-height:1.6;margin-bottom:20px;}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;}
+
+/* EMPTY */
+.empty{padding:40px;text-align:center;color:var(--txt3);font-size:13px;}
+.empty svg{width:36px;height:36px;margin:0 auto 12px;opacity:.3;display:block;}
+
+.section-gap{height:20px;}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="app.html">
+    <img src="https://elitesmarthome.com/wp-content/uploads/2019/01/unnamed-26.png" onerror="this.style.display='none'">
+    <span>PLAN MARKUP</span>
+  </a>
+  <div class="nav-sep"></div>
+  <span class="nav-badge">ADMIN</span>
+  <a class="nav-link" href="app.html">← Back to App</a>
+  <button class="nav-signout" onclick="doSignOut()">Sign Out</button>
+</nav>
+
+<main>
+  <div class="page-header">
+    <h1>USER MANAGEMENT</h1>
+    <p>Invite team members, manage roles, and control access to Elite Plan Markup.</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat accent">
+      <div class="stat-val" id="stat-total">—</div>
+      <div class="stat-lbl">Total Users</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="stat-active">—</div>
+      <div class="stat-lbl">Active</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="stat-pending">—</div>
+      <div class="stat-lbl">Pending Invite</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="stat-admin">—</div>
+      <div class="stat-lbl">Admins</div>
+    </div>
+  </div>
+
+  <!-- Invite -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-head">
+      <h2>Invite New User</h2>
+    </div>
+    <div style="padding:16px 20px;">
+      <div class="invite-row">
+        <input type="text" id="inv-name" placeholder="Full name" style="max-width:180px;">
+        <input type="email" id="inv-email" placeholder="Email address">
+        <select class="role-sel" id="inv-role">
+          <option value="staff">Staff</option>
+          <option value="admin">Admin</option>
+        </select>
+        <button class="btn btn-primary" id="inv-btn" onclick="sendInvite()">
+          Send Invite
+        </button>
+      </div>
+      <div id="inv-err" style="font-size:12px;color:var(--red);margin-top:8px;display:none;"></div>
+    </div>
+  </div>
+
+  <!-- Users Table -->
+  <div class="card">
+    <div class="card-head">
+      <h2>All Users</h2>
+      <button class="btn btn-ghost btn-sm" onclick="loadUsers()">↻ Refresh</button>
+    </div>
+    <div id="users-wrap">
+      <div class="empty">Loading...</div>
+    </div>
+  </div>
+</main>
+
+<!-- Confirm Modal -->
+<div class="modal-bg" id="confirm-modal">
+  <div class="modal">
+    <h3 id="modal-title">Confirm Action</h3>
+    <p id="modal-msg">Are you sure?</p>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" id="modal-confirm-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const SURL = 'https://lckdjkildekbjlsllybh.supabase.co';
+const SKEY = 'sb_publishable_zqMJbNn1pbZvdqCrwGrSoQ_x0DHar3b';
+const sb   = supabase.createClient(SURL, SKEY);
+let CU = null, userRole = null;
+
+async function init() {
+  const { data:{ session } } = await sb.auth.getSession();
+  if (!session) { location.href = 'index.html'; return; }
+  CU = session.user;
+  // Check admin role
+  const { data } = await sb.from('markup_users').select('role').eq('id', CU.id).single();
+  if (!data || data.role !== 'admin') {
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:DM Sans,sans-serif;color:#7a8fac;font-size:14px;">Access denied — Admin only</div>';
+    return;
+  }
+  userRole = data.role;
+  loadUsers();
+}
+
+async function loadUsers() {
+  document.getElementById('users-wrap').innerHTML = '<div class="empty">Loading...</div>';
+  const { data: users, error } = await sb.from('markup_users').select('*').order('created_at', { ascending: false });
+  if (error) { showToast('Error loading users: ' + error.message, true); return; }
+
+  const allUsers = users || [];
+
+  // Stats
+  const total   = allUsers.length;
+  const active  = allUsers.filter(u => u.status === 'active').length;
+  const pending = allUsers.filter(u => u.status === 'pending').length;
+  const admins  = allUsers.filter(u => u.role === 'admin').length;
+  document.getElementById('stat-total').textContent   = total;
+  document.getElementById('stat-active').textContent  = active;
+  document.getElementById('stat-pending').textContent = pending;
+  document.getElementById('stat-admin').textContent   = admins;
+
+  if (!users.length) {
+    document.getElementById('users-wrap').innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>No users yet. Invite someone above.</div>';
+    return;
+  }
+
+  const rows = allUsers.map(u => {
+    const initials = (u.full_name || u.email || '?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const roleBadge = u.role === 'admin'
+      ? '<span class="badge badge-admin">Admin</span>'
+      : '<span class="badge badge-staff">Staff</span>';
+    const statusBadge = u.status === 'active'
+      ? '<span class="badge badge-active">Active</span>'
+      : u.status === 'pending'
+      ? '<span class="badge badge-pending">Pending</span>'
+      : '<span class="badge badge-inactive">Inactive</span>';
+    const joined = u.created_at ? new Date(u.created_at).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}) : '—';
+    const isSelf = u.id === CU.id;
+    return `<tr>
+      <td>
+        <div class="user-info">
+          <div class="avatar">${initials}</div>
+          <div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <input type="text" value="${u.full_name || ''}" placeholder="Full name"
+                style="background:transparent;border:none;border-bottom:1px solid transparent;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;outline:none;width:160px;padding:1px 2px;transition:border-color .12s;"
+                onfocus="this.style.borderColor='var(--acc)'"
+                onblur="this.style.borderColor='transparent';updateUserName('${u.id}',this.value)"
+                onkeydown="if(event.key==='Enter')this.blur()"
+              >
+              ${isSelf ? '<span style="font-size:10px;color:var(--txt3)">(you)</span>' : ''}
+            </div>
+            <div class="user-email">${u.email || '—'}</div>
+          </div>
+        </div>
+      </td>
+      <td>${roleBadge}</td>
+      <td>${statusBadge}</td>
+      <td style="color:var(--txt3);font-size:12px;">${joined}</td>
+      <td>
+        <div class="actions">
+          ${!isSelf ? (u.status === 'pending'
+            ? `<button class="btn btn-ghost btn-sm" onclick="resendInvite('${u.id}','${(u.email||'').replace(/'/g,"\\'")}')">Resend</button>
+               <button class="btn btn-danger btn-sm" onclick="confirmDeleteInvite('${u.id}','${(u.email||'').replace(/'/g,"\\'")}')">Cancel</button>`
+            : `<select class="role-sel" style="padding:4px 8px;font-size:11px;" onchange="changeRole('${u.id}', this.value)">
+                <option value="staff" ${u.role==='staff'?'selected':''}>Staff</option>
+                <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
+              </select>
+              ${u.status === 'active'
+                ? `<button class="btn btn-danger btn-sm" onclick="confirmDeactivate('${u.id}','${(u.full_name||u.email).replace(/'/g,"\\'")}')">Deactivate</button>`
+                : `<button class="btn btn-ghost btn-sm" onclick="reactivate('${u.id}')">Reactivate</button>`
+              }`)
+          : '<span style="font-size:11px;color:var(--txt3);">—</span>'}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('users-wrap').innerHTML = `
+    <table class="user-table">
+      <thead><tr>
+        <th>User</th><th>Role</th><th>Status</th><th>Joined</th><th style="text-align:right">Actions</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+async function sendInvite() {
+  const name  = document.getElementById('inv-name').value.trim();
+  const email = document.getElementById('inv-email').value.trim().toLowerCase();
+  const role  = document.getElementById('inv-role').value;
+  const btn   = document.getElementById('inv-btn');
+  const errEl = document.getElementById('inv-err');
+  errEl.style.display = 'none';
+  if (!email || !email.includes('@')) { showInvErr('Enter a valid email address.'); return; }
+
+  btn.disabled = true; btn.textContent = 'Sending...';
+
+  try {
+    // Use Supabase Admin invite (sends email via Supabase Auth)
+    const { data, error } = await sb.auth.admin?.inviteUserByEmail?.(email, {
+      data: { full_name: name, role }
+    });
+
+    // Fallback: if admin API not available from browser, use edge function or direct insert
+    // Check if already an active user
+    const { data: existingUser } = await sb.from('markup_users').select('id,status').eq('email', email).maybeSingle();
+    if (existingUser && existingUser.status === 'active') throw new Error('A user with that email already has an active account.');
+
+    // Send invite email via edge function (creates auth user, generates magic link)
+    await triggerInviteEmail(email, name, role);
+
+    // After edge function creates auth user, trigger fires and inserts into markup_users
+    // Retry up to 5 times waiting for the row to appear
+    let newUser = null;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      await new Promise(r => setTimeout(r, 1000));
+      const { data } = await sb.from('markup_users').select('id').eq('email', email).maybeSingle();
+      if (data) { newUser = data; break; }
+    }
+    if (newUser) {
+      await sb.from('markup_users').update({
+        full_name: name || null,
+        role,
+        status: 'pending',
+        invited_by: CU.id,
+        invited_at: new Date().toISOString()
+      }).eq('email', email);
+    }
+
+    showToast('✅ Invite sent to ' + email);
+    document.getElementById('inv-name').value  = '';
+    document.getElementById('inv-email').value = '';
+    loadUsers();
+  } catch(e) {
+    showInvErr(e.message || 'Failed to send invite.');
+  }
+  btn.disabled = false; btn.textContent = 'Send Invite';
+}
+
+// ── Mailgun config ─────────────────────────────────────────────────────
+
+
+async function sendMailgunEmail(to, subject, html, inviteEmail = null, inviteName = null) {
+  window._inviteName = inviteName;
+  const resp = await fetch(`${SURL}/functions/v1/Mail-Send`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${sb.supabaseKey}`
+    },
+    body: JSON.stringify({ to, subject, html, inviteEmail, inviteName: inviteEmail ? _inviteName : undefined })
+  });
+  const data = await resp.json();
+  if (!resp.ok) throw new Error(data.result?.message || 'Email error ' + resp.status);
+  return data;
+}
+
+function inviteEmailHTML(name, email, resetLink) {
+  const greeting = name ? `Hi ${name.split(' ')[0]},` : 'Hi there,';
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>
+  body{margin:0;padding:0;background:#f0f4f8;font-family:'Helvetica Neue',Arial,sans-serif;}
+  .wrap{max-width:580px;margin:40px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);}
+  .header{background:linear-gradient(135deg,#0d1f3c,#1d6fdb);padding:36px 40px;text-align:center;}
+  .header img{height:48px;width:auto;margin-bottom:16px;display:block;margin-left:auto;margin-right:auto;}
+  .header h1{color:#ffffff;font-size:22px;font-weight:700;letter-spacing:1px;margin:0;}
+  .header p{color:rgba(255,255,255,.7);font-size:13px;margin:6px 0 0;}
+  .body{padding:40px;}
+  .body p{color:#334155;font-size:15px;line-height:1.7;margin:0 0 16px;}
+  .btn-wrap{text-align:center;margin:32px 0;}
+  .btn{display:inline-block;background:linear-gradient(135deg,#1d6fdb,#38bdf8);color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:8px;font-size:15px;font-weight:700;letter-spacing:.3px;}
+  .footer{background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;}
+  .footer p{color:#94a3b8;font-size:12px;margin:0;line-height:1.6;}
+  .footer a{color:#1d6fdb;text-decoration:none;}
+  .divider{height:1px;background:#e2e8f0;margin:24px 0;}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="header">
+    <img src="https://elitesmarthome.com/wp-content/uploads/2019/01/unnamed-26.png" alt="Elite Smart Home">
+    <h1>You're Invited</h1>
+    <p>Elite Plan Markup — Smart Home Design Platform</p>
+  </div>
+  <div class="body">
+    <p>${greeting}</p>
+    <p>You've been invited to <strong>Elite Plan Markup</strong>, Elite Smart Home's internal platform for marking up architectural plans with smart home system designs.</p>
+    <p>Click the button below to set your password and activate your account. This link expires in 24 hours.</p>
+    <div class="btn-wrap">
+      <a href="${resetLink}" class="btn">Activate My Account →</a>
+    </div>
+    <div class="divider"></div>
+    <p style="font-size:13px;color:#64748b;">If the button doesn't work, copy and paste this link:<br>
+    <a href="${resetLink}" style="color:#1d6fdb;word-break:break-all;">${resetLink}</a></p>
+    <p style="font-size:13px;color:#64748b;">If you didn't expect this invitation, you can ignore this email.</p>
+  </div>
+  <div class="footer">
+    <p><strong>Elite Smart Home</strong> · 409 Bloomfield Dr. STE 5, West Berlin NJ 08091<br>
+    <a href="tel:8563159147">856-315-9147</a> · <a href="https://elitesmarthome.com">elitesmarthome.com</a></p>
+  </div>
+</div>
+</body></html>`;
+}
+
+async function triggerInviteEmail(email, name, role) {
+  try {
+    // Send branded invite email via Mailgun edge function
+    // The edge function handles Supabase user creation and invite link generation
+    const html = inviteEmailHTML(name, email, '__INVITE_LINK__');
+    await sendMailgunEmail(email, "You're invited to Elite Plan Markup", html, email, name);
+    showToast('✅ Invite email sent');
+  } catch(e) {
+    console.error('Invite email error:', e);
+    showToast('⚠️ Saved invite but email failed: ' + e.message, true);
+  }
+}
+
+async function resendInvite(userId, email) {
+  showToast('Resending invite to ' + email + '...');
+  const { data } = await sb.from('markup_users').select('full_name,role').eq('id', userId).single();
+  await triggerInviteEmail(email, data?.full_name || '', data?.role || 'tech');
+  showToast('✅ Invite resent to ' + email);
+}
+
+async function updateUserName(userId, name) {
+  if (!name.trim()) return;
+  const { error } = await sb.from('markup_users').update({ full_name: name.trim() }).eq('id', userId);
+  if (error) { showToast('Error: ' + error.message, true); return; }
+  showToast('✅ Name updated');
+}
+
+async function changeRole(userId, newRole) {
+  const { error } = await sb.from('markup_users').update({ role: newRole }).eq('id', userId);
+  if (error) { showToast('Error: ' + error.message, true); return; }
+  showToast('✅ Role updated to ' + newRole);
+  loadUsers();
+}
+
+async function reactivate(userId) {
+  try {
+    const res = await fetch(`${SURL}/functions/v1/user-mgmt`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'reactivate', userId })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to reactivate');
+    await sb.from('markup_users').update({ status: 'active' }).eq('id', userId);
+    showToast('✅ User reactivated');
+    loadUsers();
+  } catch(e) {
+    showToast('Error: ' + e.message, true);
+  }
+}
+
+let pendingAction = null;
+function confirmDeactivate(userId, name) {
+  document.getElementById('modal-title').textContent = 'Deactivate User';
+  document.getElementById('modal-msg').textContent = `Deactivate ${name}? They will no longer be able to log in.`;
+  document.getElementById('modal-confirm-btn').textContent = 'Deactivate';
+  document.getElementById('modal-confirm-btn').onclick = async () => {
+    closeModal();
+    try {
+      // Disable in Supabase Auth via edge function
+      const res = await fetch(`${SURL}/functions/v1/user-mgmt`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'deactivate', userId })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to deactivate');
+      // Update status in markup_users
+      await sb.from('markup_users').update({ status: 'inactive' }).eq('id', userId);
+      showToast('✅ User deactivated');
+      loadUsers();
+    } catch(e) {
+      showToast('Error: ' + e.message, true);
+    }
+  };
+  document.getElementById('confirm-modal').classList.add('show');
+}
+
+function confirmDelete(userId, name) {
+  document.getElementById('modal-title').textContent = 'Remove User';
+  document.getElementById('modal-msg').textContent = `Remove ${name} from the system? This cannot be undone.`;
+  document.getElementById('modal-confirm-btn').textContent = 'Remove';
+  document.getElementById('modal-confirm-btn').onclick = async () => {
+    closeModal();
+    await sb.from('markup_users').delete().eq('id', userId);
+    showToast('User removed');
+    loadUsers();
+  };
+  document.getElementById('confirm-modal').classList.add('show');
+}
+
+function confirmDeleteInvite(inviteId, email) {
+  document.getElementById('modal-title').textContent = 'Cancel Invite';
+  document.getElementById('modal-msg').textContent = `Cancel the invite for ${email}? They will no longer be able to use the invite link.`;
+  document.getElementById('modal-confirm-btn').textContent = 'Cancel Invite';
+  document.getElementById('modal-confirm-btn').onclick = async () => {
+    closeModal();
+    // Delete from markup_users
+    await sb.from('markup_users').delete().eq('id', inviteId);
+    // Delete from auth via edge function
+    try {
+      await fetch(`${SURL}/functions/v1/user-mgmt`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', userId: inviteId })
+      });
+    } catch(e) { console.warn('Auth delete failed:', e); }
+    showToast('Invite cancelled');
+    loadUsers();
+  };
+  document.getElementById('confirm-modal').classList.add('show');
+}
+
+function closeModal() { document.getElementById('confirm-modal').classList.remove('show'); }
+document.getElementById('confirm-modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+
+function showInvErr(msg) {
+  const el = document.getElementById('inv-err');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+let toastTimer;
+function showToast(msg, isErr) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = isErr ? 'rgba(239,68,68,.4)' : 'var(--bdr2)';
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+async function doSignOut() {
+  await sb.auth.signOut();
+  location.href = 'index.html';
+}
+
+init();
+</script>
+</body>
+</html>

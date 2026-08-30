@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reset Password — Elite Plan Markup</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#080d18;--surf:#0f1624;--surf2:#162030;--bdr:#1e2d45;--bdr2:#243450;--acc:#1d6fdb;--acc2:#38bdf8;--txt:#e2e8f4;--txt2:#7a8fac;--txt3:#3a4f6a;--red:#ef4444;--grn:#22c55e;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.015) 39px,rgba(255,255,255,.015) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.015) 39px,rgba(255,255,255,.015) 40px);pointer-events:none;}
+.card{background:var(--surf);border:1px solid var(--bdr2);border-radius:16px;padding:36px;width:100%;max-width:400px;position:relative;}
+.card::before{content:'';position:absolute;top:0;left:24px;right:24px;height:2px;background:linear-gradient(90deg,transparent,var(--acc),var(--acc2),transparent);border-radius:0 0 2px 2px;}
+.brand{text-align:center;margin-bottom:28px;}
+.brand img{height:48px;width:auto;object-fit:contain;margin-bottom:12px;}
+.brand h1{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--txt2);}
+.brand .sub{font-size:13px;color:var(--txt3);margin-top:4px;}
+.desc{font-size:13px;color:var(--txt2);line-height:1.6;margin-bottom:20px;text-align:center;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:11px;font-weight:600;letter-spacing:1px;color:var(--txt2);text-transform:uppercase;margin-bottom:5px;}
+.field input{width:100%;padding:10px 14px;background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .14s;}
+.field input:focus{border-color:var(--acc);}
+.field input::placeholder{color:var(--txt3);}
+.btn{width:100%;padding:12px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .14s;margin-top:4px;background:linear-gradient(135deg,#1d6fdb,#38bdf8);color:#fff;box-shadow:0 4px 20px rgba(29,111,219,.3);}
+.btn:hover{filter:brightness(1.08);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;padding:8px 12px;font-size:12px;color:#fca5a5;margin-bottom:12px;display:none;}
+.error.show{display:block;}
+.success{display:none;text-align:center;}
+.success-icon{font-size:48px;margin-bottom:16px;}
+.success h2{font-size:20px;font-weight:700;margin-bottom:8px;}
+.success p{font-size:13px;color:var(--txt2);line-height:1.6;margin-bottom:20px;}
+.back{text-align:center;margin-top:16px;}
+.back a{font-size:12px;color:var(--txt3);text-decoration:none;transition:color .12s;}
+.back a:hover{color:var(--acc2);}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand">
+    <img src="https://elitesmarthome.com/wp-content/uploads/2019/01/unnamed-26.png" onerror="this.style.display='none'">
+    <h1>PLAN MARKUP</h1>
+    <div class="sub">Elite Smart Home</div>
+  </div>
+
+  <div id="form-view">
+    <p class="desc">Enter your email address and we'll send you a link to reset your password.</p>
+    <div class="error" id="err"></div>
+    <div class="field">
+      <label>Email Address</label>
+      <input type="email" id="email" placeholder="you@elitesmarthome.com" autocomplete="email" onkeydown="if(event.key==='Enter')sendReset()">
+    </div>
+    <button class="btn" id="reset-btn" onclick="sendReset()">Send Reset Link</button>
+    <div class="back"><a href="index.html">← Back to Sign In</a></div>
+  </div>
+
+  <div class="success" id="success-view">
+    <div class="success-icon">📧</div>
+    <h2>Check your inbox</h2>
+    <p>We sent a password reset link to your email. Click the link to set a new password. It expires in 1 hour.</p>
+    <div class="back"><a href="index.html">← Back to Sign In</a></div>
+  </div>
+</div>
+
+<script>
+const SB = supabase.createClient('https://lckdjkildekbjlsllybh.supabase.co','sb_publishable_zqMJbNn1pbZvdqCrwGrSoQ_x0DHar3b');
+const SURL = 'https://lckdjkildekbjlsllybh.supabase.co';
+
+async function sendReset() {
+  const email = document.getElementById('email').value.trim().toLowerCase();
+  const btn = document.getElementById('reset-btn');
+  clearErr();
+
+  if (!email || !email.includes('@')) { showErr('Enter a valid email address.'); return; }
+
+  btn.disabled = true; btn.textContent = 'Sending...';
+
+  try {
+    // Check if user exists in markup_users
+    const { data: user, error: userErr } = await SB.from('markup_users').select('id').eq('email', email).maybeSingle();
+    if (userErr) throw userErr;
+    if (!user) { showErr('No account found with that email address.'); btn.disabled = false; btn.textContent = 'Send Reset Link'; return; }
+
+    // Send reset email via edge function
+    const res = await fetch(`${SURL}/functions/v1/Mail-Send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: email,
+        subject: 'Reset your Elite Plan Markup password',
+        html: `<div style="font-family:Arial,sans-serif;max-width:500px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);">
+          <div style="background:linear-gradient(135deg,#0d1f3c,#1d6fdb);padding:32px 40px;text-align:center;">
+            <img src="https://elitesmarthome.com/wp-content/uploads/2019/01/unnamed-26.png" style="height:48px;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;">
+            <h1 style="color:#fff;font-size:20px;margin:0;">Password Reset</h1>
+            <p style="color:rgba(255,255,255,.7);font-size:13px;margin:6px 0 0;">Elite Plan Markup</p>
+          </div>
+          <div style="padding:40px;">
+            <p style="color:#334155;font-size:15px;line-height:1.7;">Click the button below to reset your password. This link expires in 1 hour.</p>
+            <div style="text-align:center;margin:32px 0;">
+              <a href="__INVITE_LINK__" style="display:inline-block;background:linear-gradient(135deg,#1d6fdb,#38bdf8);color:#fff;text-decoration:none;padding:14px 36px;border-radius:8px;font-size:15px;font-weight:700;">Reset My Password →</a>
+            </div>
+            <p style="font-size:13px;color:#64748b;">If the button doesn't work, copy this link:<br><a href="__INVITE_LINK__" style="color:#1d6fdb;word-break:break-all;">__INVITE_LINK__</a></p>
+            <p style="font-size:13px;color:#64748b;margin-top:16px;">If you didn't request this, you can ignore this email.</p>
+          </div>
+          <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
+            <p style="color:#94a3b8;font-size:12px;margin:0;"><strong>Elite Smart Home</strong> · 409 Bloomfield Dr. STE 5, West Berlin NJ 08091<br>
+            <a href="tel:8563159147" style="color:#1d6fdb;text-decoration:none;">856-315-9147</a> · <a href="https://elitesmarthome.com" style="color:#1d6fdb;text-decoration:none;">elitesmarthome.com</a></p>
+          </div>
+        </div>`,
+        inviteEmail: email
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to send reset email');
+
+    document.getElementById('form-view').style.display = 'none';
+    document.getElementById('success-view').style.display = 'block';
+
+  } catch(e) {
+    showErr(e.message || 'Something went wrong. Please try again.');
+    btn.disabled = false; btn.textContent = 'Send Reset Link';
+  }
+}
+
+function showErr(m) { const e = document.getElementById('err'); e.textContent = m; e.classList.add('show'); }
+function clearErr() { document.getElementById('err').classList.remove('show'); }
+</script>
+</body>
+</html>
