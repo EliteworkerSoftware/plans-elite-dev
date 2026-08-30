@@ -91,7 +91,7 @@ body::before{
   </div>
 </div>
 <script>
-const SB = supabase.createClient('https://lckdjkildekbjlsllybh.supabase.co','sb_publishable_zqMJbNn1pbZvdqCrwGrSoQ_x0DHar3b');
+const SB = supabase.createClient('https://hnbfjymlhsughcipxuad.supabase.co','sb_publishable_KrZNTyafSc8nrhyYmdTnkA_J1mSr1Sg');
 SB.auth.getSession().then(({data:{session}})=>{if(session)location.href='app.html';});
 SB.auth.onAuthStateChange((_,session)=>{if(session)location.href='app.html';});
 async function signIn(){
@@ -107,7 +107,7 @@ async function forgotPassword(){
   const email=document.getElementById('email').value.trim();
   if(!email){showErr('Enter your email address first.');return;}
   try{
-    const res=await fetch('https://lckdjkildekbjlsllybh.supabase.co/functions/v1/Mail-Send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:email,subject:'Reset your Elite Plan Markup password',inviteEmail:email})});
+    const res=await fetch('https://hnbfjymlhsughcipxuad.supabase.co/functions/v1/Mail-Send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:email,subject:'Reset your Elite Plan Markup password',inviteEmail:email})});
     const d=await res.json();
     if(!res.ok)throw new Error(d.error||'Failed to send reset email');
     document.getElementById('reset-sent').style.display='block';
