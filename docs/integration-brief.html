@@ -1,0 +1,698 @@
+<title>Plan Markup Integration Brief</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --bg:#F5F7FA;
+    --bg-grid:#E4E9F0;
+    --surface:#FFFFFF;
+    --surface-2:#EDF1F6;
+    --ink:#182430;
+    --ink-2:#57677A;
+    --ink-3:#8794A3;
+    --line:#D7DEE7;
+    --line-strong:#B9C4D2;
+    --accent:#2A5FD1;
+    --accent-ink:#173C8C;
+    --accent-soft:#E4ECFC;
+    --good:#207A52;
+    --good-soft:#E3F3EA;
+    --warn:#9C6300;
+    --warn-soft:#FBF0DA;
+    --crit:#B23A22;
+    --crit-soft:#FBE7E1;
+    --shadow: 0 1px 2px rgba(24,36,48,.06), 0 8px 24px -12px rgba(24,36,48,.12);
+    --sans: 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0D141C;
+      --bg-grid:#18222E;
+      --surface:#131C27;
+      --surface-2:#1A2531;
+      --ink:#E4EAF2;
+      --ink-2:#93A2B5;
+      --ink-3:#647184;
+      --line:#26333F;
+      --line-strong:#37475A;
+      --accent:#6C9EF5;
+      --accent-ink:#BBD3FF;
+      --accent-soft:#16283F;
+      --good:#4FB884;
+      --good-soft:#123324;
+      --warn:#D9A441;
+      --warn-soft:#332608;
+      --crit:#E2705A;
+      --crit-soft:#3A1912;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0D141C;
+    --bg-grid:#18222E;
+    --surface:#131C27;
+    --surface-2:#1A2531;
+    --ink:#E4EAF2;
+    --ink-2:#93A2B5;
+    --ink-3:#647184;
+    --line:#26333F;
+    --line-strong:#37475A;
+    --accent:#6C9EF5;
+    --accent-ink:#BBD3FF;
+    --accent-soft:#16283F;
+    --good:#4FB884;
+    --good-soft:#123324;
+    --warn:#D9A441;
+    --warn-soft:#332608;
+    --crit:#E2705A;
+    --crit-soft:#3A1912;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      repeating-linear-gradient(to right, var(--bg-grid) 0 1px, transparent 1px 88px),
+      repeating-linear-gradient(to bottom, var(--bg-grid) 0 1px, transparent 1px 88px),
+      var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:15.5px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:var(--sans);font-weight:700;color:var(--ink);text-wrap:balance;letter-spacing:-.01em;}
+  a{color:var(--accent);}
+  a:focus-visible, button:focus-visible, summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  code{font-family:var(--mono);font-size:.88em;background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:.1em .4em;}
+
+  .eyebrow{
+    font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);
+  }
+
+  /* ── Title block ── */
+  .titleblock{
+    max-width:1180px;margin:0 auto;padding:56px 32px 36px;
+    border-bottom:1px solid var(--line-strong);
+  }
+  .titleblock .eyebrow{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .titleblock .eyebrow::before{content:"";width:22px;height:1.5px;background:var(--accent);display:inline-block;}
+  .titleblock h1{font-size:clamp(28px,4vw,40px);margin:0 0 10px;}
+  .titleblock p.lede{font-size:17px;color:var(--ink-2);max-width:68ch;margin:0 0 22px;}
+  .meta{display:flex;flex-wrap:wrap;gap:10px 28px;font-family:var(--mono);font-size:12.5px;color:var(--ink-2);}
+  .meta b{color:var(--ink);font-weight:600;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;}
+  .chip{
+    font-family:var(--mono);font-size:11.5px;font-weight:500;padding:5px 10px;border-radius:5px;
+    border:1px solid var(--line-strong);color:var(--ink-2);display:inline-flex;align-items:center;gap:6px;
+  }
+  .chip.on{color:var(--good);background:var(--good-soft);border-color:transparent;}
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+  /* ── Page grid: sidebar + content ── */
+  .layout{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr);gap:56px;padding:40px 32px 100px;}
+  @media (max-width: 880px){ .layout{grid-template-columns:1fr;} nav.toc{position:static;order:-1;} }
+
+  nav.toc{position:sticky;top:28px;align-self:start;font-family:var(--mono);font-size:12.5px;}
+  nav.toc .eyebrow{margin-bottom:12px;}
+  nav.toc ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;counter-reset:toc;}
+  nav.toc li{counter-increment:toc;}
+  nav.toc a{
+    display:flex;gap:8px;color:var(--ink-2);text-decoration:none;padding:5px 0;border-left:2px solid transparent;padding-left:10px;
+  }
+  nav.toc a::before{content:counter(toc,decimal-leading-zero);color:var(--ink-3);}
+  nav.toc a:hover{color:var(--accent);border-left-color:var(--line-strong);}
+
+  main{min-width:0;}
+  section{padding-bottom:52px;margin-bottom:52px;border-bottom:1px solid var(--line);scroll-margin-top:24px;}
+  section:last-child{border-bottom:none;}
+  section > .eyebrow{margin-bottom:8px;}
+  section > h2{font-size:22px;margin:0 0 6px;}
+  section > .dek{color:var(--ink-2);font-size:14.5px;margin:0 0 26px;max-width:64ch;}
+  section p{max-width:68ch;}
+  section h3{font-size:15.5px;margin:30px 0 10px;}
+  section h3:first-of-type{margin-top:0;}
+
+  .prose-w{max-width:68ch;}
+
+  /* ── quick facts strip ── */
+  .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:22px 0 0;}
+  .facts div{background:var(--surface);padding:14px 16px;}
+  .facts .n{font-family:var(--mono);font-size:20px;font-weight:600;color:var(--ink);display:block;font-variant-numeric:tabular-nums;}
+  .facts .l{font-size:11.5px;color:var(--ink-2);}
+
+  /* ── tables ── */
+  .twrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;margin:16px 0 8px;box-shadow:var(--shadow);}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;background:var(--surface);}
+  th{text-align:left;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:600;padding:10px 14px;background:var(--surface-2);border-bottom:1px solid var(--line);white-space:nowrap;}
+  td{padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink);}
+  tr:last-child td{border-bottom:none;}
+  td.mono, th.mono{font-family:var(--mono);}
+  td.dim{color:var(--ink-2);}
+  .tag{font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:4px;font-weight:600;white-space:nowrap;}
+  .tag.keep{background:var(--good-soft);color:var(--good);}
+  .tag.cut{background:var(--crit-soft);color:var(--crit);}
+  .tag.ask{background:var(--warn-soft);color:var(--warn);}
+  .tag.done{background:var(--good-soft);color:var(--good);}
+  .tag.todo{background:var(--surface-2);color:var(--ink-2);}
+
+  /* ── callouts ── */
+  .callout{border-radius:10px;padding:16px 18px;margin:18px 0;border:1px solid transparent;max-width:none;}
+  .callout p{margin:0;max-width:none;}
+  .callout .lbl{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:6px;}
+  .callout.warn{background:var(--warn-soft);border-color:color-mix(in srgb, var(--warn) 30%, transparent);} .callout.warn .lbl{color:var(--warn);}
+  .callout.crit{background:var(--crit-soft);border-color:color-mix(in srgb, var(--crit) 30%, transparent);} .callout.crit .lbl{color:var(--crit);}
+  .callout.good{background:var(--good-soft);border-color:color-mix(in srgb, var(--good) 30%, transparent);} .callout.good .lbl{color:var(--good);}
+  .callout.info{background:var(--accent-soft);border-color:color-mix(in srgb, var(--accent) 30%, transparent);} .callout.info .lbl{color:var(--accent-ink);}
+
+  /* ── file/lib lists ── */
+  ul.clean, ol.clean{margin:10px 0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:9px;}
+  ul.clean li, ol.clean li{padding-left:20px;position:relative;max-width:68ch;}
+  ul.clean li::before{content:"—";position:absolute;left:0;color:var(--ink-3);}
+  ol.clean{counter-reset:steps;}
+  ol.clean li::before{counter-increment:steps;content:counter(steps)".";position:absolute;left:0;color:var(--accent);font-family:var(--mono);font-weight:600;font-size:13px;}
+  ol.clean li{padding-left:26px;}
+
+  /* ── figures ── */
+  figure{margin:26px 0 10px;}
+  figure svg{width:100%;height:auto;display:block;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);}
+  figcaption{font-size:13px;color:var(--ink-2);margin-top:10px;max-width:68ch;}
+  figcaption b{color:var(--ink);}
+
+  /* ── appendix / details ── */
+  details{border:1px solid var(--line);border-radius:10px;background:var(--surface);margin-bottom:10px;box-shadow:var(--shadow);}
+  details + details{margin-top:10px;}
+  summary{cursor:pointer;padding:13px 16px;font-family:var(--mono);font-size:13px;font-weight:600;color:var(--ink);list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  summary::-webkit-details-marker{display:none;}
+  summary .cnt{font-weight:400;color:var(--ink-3);font-size:11.5px;}
+  summary::after{content:"+";color:var(--ink-3);font-size:16px;font-weight:400;}
+  details[open] summary::after{content:"–";}
+  details .twrap{margin:0;border:none;border-radius:0;border-top:1px solid var(--line);box-shadow:none;}
+
+  /* checklist */
+  .checklist{display:flex;flex-direction:column;gap:14px;margin-top:18px;}
+  .checkitem{display:grid;grid-template-columns:26px minmax(0,1fr);gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--surface);box-shadow:var(--shadow);}
+  .checkitem .num{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent);border:1.5px solid var(--accent);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;}
+  .checkitem h4{margin:0 0 4px;font-size:14.5px;}
+  .checkitem p{margin:0;color:var(--ink-2);font-size:13.5px;max-width:none;}
+
+  ::selection{background:var(--accent-soft);}
+</style>
+
+<div class="titleblock">
+  <div class="eyebrow">Technical Brief · Elite Smart Home</div>
+  <h1>Plan Markup → eliteworker</h1>
+  <p class="lede">What the plan-markup tool is built from today, what changes once it lives inside eliteworker's jobs area, and the open questions your dev needs answered before he can quote hours.</p>
+  <div class="meta">
+    <span><b>Prepared</b> Aug 30, 2026</span>
+    <span><b>Scope</b> Full re-platform, no data carryover</span>
+    <span><b>Author's system</b> Claude Code</span>
+  </div>
+  <div class="chips">
+    <span class="chip on"><span class="dot"></span>Dev environment live</span>
+    <span class="chip on"><span class="dot"></span>Full schema pulled from production</span>
+    <span class="chip"><span class="dot"></span>Edge function source — not yet retrieved</span>
+    <span class="chip"><span class="dot"></span>4 open scoping questions</span>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="toc">
+    <div class="eyebrow">Contents</div>
+    <ol>
+      <li><a href="#why">Why this exists</a></li>
+      <li><a href="#today">What it is today</a></li>
+      <li><a href="#backend">The Supabase backend</a></li>
+      <li><a href="#ai">AI features</a></li>
+      <li><a href="#debt">Technical debt</a></li>
+      <li><a href="#prepped">Already prepped</a></li>
+      <li><a href="#target">Target architecture</a></li>
+      <li><a href="#checklist">Scoping checklist</a></li>
+      <li><a href="#appendix">Appendix: full schema</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <section id="why">
+      <div class="eyebrow">01</div>
+      <h2>Why this document exists</h2>
+      <p class="dek">Your dev is walking into this cold. This is everything he'd otherwise have to reverse-engineer from a 14,800-line codebase before he could give you an honest estimate.</p>
+      <p class="prose-w">The plan-markup tool has been running as its own small product for a while — its own login, its own database, its own hosting. The plan now is to fold it into <b>eliteworker</b>, sitting inside a customer's job page instead of living on its own. This brief covers the current architecture end to end, the decisions already made about what carries over, and the questions that are still open — so the estimate he gives you is grounded in what's actually there, not a guess.</p>
+    </section>
+
+    <section id="today">
+      <div class="eyebrow">02</div>
+      <h2>What it is today</h2>
+      <p class="dek">A hand-built, five-page static site — no framework, no build step, no bundler.</p>
+      <p class="prose-w">Every page is plain HTML with inline (now partly extracted) CSS and JavaScript, deployed by uploading files straight to Apache/IONOS hosting at <code>plans.elitesmarthome.com</code>. There's no <code>package.json</code>, no compile step — a browser loads the files exactly as written. The backend is entirely Supabase: Postgres, file storage, realtime, and two serverless functions.</p>
+
+      <div class="facts">
+        <div><span class="n">5</span><span class="l">HTML pages</span></div>
+        <div><span class="n">14,826</span><span class="l">lines, total</span></div>
+        <div><span class="n">13</span><span class="l">database tables</span></div>
+        <div><span class="n">0</span><span class="l">build steps</span></div>
+      </div>
+
+      <h3>File map</h3>
+      <div class="twrap">
+        <table>
+          <thead><tr><th>File</th><th>Lines</th><th>Status</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">app.html</td><td class="mono">1,619</td><td><span class="tag done">split</span></td><td>Markup canvas shell — PDF viewer, drawing tools, icon palette</td></tr>
+            <tr><td class="mono">app.css</td><td class="mono">596</td><td><span class="tag done">extracted</span></td><td>All styling for app.html</td></tr>
+            <tr><td class="mono">app.js</td><td class="mono">11,570</td><td><span class="tag done">extracted</span></td><td>Entire application logic — canvas, PDF handling, Supabase calls, AI features</td></tr>
+            <tr><td class="mono">admin.html</td><td class="mono">549</td><td><span class="tag todo">inline</span></td><td>User management panel</td></tr>
+            <tr><td class="mono">index.html</td><td class="mono">119</td><td><span class="tag todo">inline</span></td><td>Sign-in page</td></tr>
+            <tr><td class="mono">invite.html</td><td class="mono">190</td><td><span class="tag todo">inline</span></td><td>Invited-user account setup</td></tr>
+            <tr><td class="mono">forgot.html</td><td class="mono">132</td><td><span class="tag todo">inline</span></td><td>Password reset request</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>External libraries</h3>
+      <div class="twrap">
+        <table>
+          <thead><tr><th>Library</th><th>Version</th><th>Loaded from</th><th>Used for</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">pdf.js</td><td class="mono">3.11.174</td><td class="dim">cdnjs</td><td>Rendering PDF pages to canvas</td></tr>
+            <tr><td class="mono">pdf-lib</td><td class="mono">1.17.1</td><td class="dim">unpkg</td><td>Editing / merging PDF documents</td></tr>
+            <tr><td class="mono">jsPDF</td><td class="mono">2.5.1</td><td class="dim">cdnjs</td><td>Generating new PDF output</td></tr>
+            <tr><td class="mono">supabase-js</td><td class="mono">@2 <span class="dim">(unpinned)</span></td><td class="dim">jsdelivr</td><td>Every backend call</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose-w" style="font-size:13.5px;color:var(--ink-2);">All three PDF libraries are actively used — confirmed by call-site count, nothing here is dead weight. <code>supabase-js@2</code> floats to whatever the latest 2.x build is; worth pinning regardless of what replaces it.</p>
+    </section>
+
+    <section id="backend">
+      <div class="eyebrow">03</div>
+      <h2>The Supabase backend</h2>
+      <p class="dek">Not just a database — four separate services, each with its own migration story.</p>
+
+      <h3>Database — customer &amp; job hierarchy</h3>
+      <p class="prose-w">The tool keeps its own parallel copy of customers and jobs: a customer has locations (addresses), a location has projects (the actual markup jobs), a project has variants (revisions).</p>
+      <div class="twrap">
+        <table>
+          <thead><tr><th>Table</th><th>Holds</th><th>Fate in target</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">markup_customers</td><td>Name, type, archived flag</td><td><span class="tag cut">drop</span> — eliteworker owns customers</td></tr>
+            <tr><td class="mono">markup_locations</td><td>Address, linked to a customer</td><td><span class="tag cut">drop</span> — eliteworker owns addresses</td></tr>
+            <tr><td class="mono">markup_projects</td><td>The job/plan itself — annotations, PDF path, an <b>unused</b> <code>eliteworker_job_id</code> column</td><td><span class="tag keep">keep, reshaped</span> — becomes the join point</td></tr>
+            <tr><td class="mono">markup_variants</td><td>Named revisions of a project (e.g. multiple PDF tabs)</td><td><span class="tag keep">keep</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout info">
+        <span class="lbl">The seam to build on</span>
+        <p><code>markup_projects.eliteworker_job_id</code> already exists in production — a text column, sitting empty, referenced nowhere in the code. Someone planned for exactly this integration and never finished wiring it up. It becomes the one foreign key a project needs once customers/locations move to eliteworker.</p>
+      </div>
+
+      <h3>Database — identity &amp; access</h3>
+      <div class="twrap">
+        <table>
+          <thead><tr><th>Table</th><th>Holds</th><th>Fate</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">markup_users</td><td>Role (admin/tech), status, links to a Supabase Auth account</td><td><span class="tag cut">drop</span> — replaced by eliteworker's own login</td></tr>
+            <tr><td class="mono">markup_invites</td><td>Pending invites before a user's first login</td><td><span class="tag cut">drop</span> — eliteworker already onboards users</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Database — AI placement cluster</h3>
+      <p class="prose-w">Confirmed with the owner: the auto room-detection / auto icon-placement feature doesn't work and isn't used. Its tables come out entirely rather than migrating — see <a href="#ai">AI Features</a> below for the full breakdown of what stays and what goes.</p>
+
+      <h3>Database — reference data</h3>
+      <div class="twrap">
+        <table>
+          <thead><tr><th>Table</th><th>Holds</th><th>Fate</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">company_icons</td><td>Custom icon library uploaded by staff</td><td><span class="tag keep">keep</span> — drop only the <code>placement_rules</code> column (AI-placement-only)</td></tr>
+            <tr><td class="mono">app_config</td><td>Generic key/value store — currently holds the shared Anthropic API key</td><td><span class="tag ask">keep, reshape</span> — becomes app config in Laravel</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Storage</h3>
+      <p class="prose-w">Every plan PDF lives in a Supabase Storage bucket named <code>plan-pdfs</code> — uploaded, downloaded, listed, and deleted from roughly two dozen call sites across <code>app.js</code>. Whatever eliteworker already uses for file storage (S3, local disk) is a direct replacement; this isn't a small feature to skip.</p>
+
+      <h3>Realtime</h3>
+      <p class="prose-w">One presence channel per open project (<code>presence:&lt;projectId&gt;</code>) shows which teammates currently have a plan open. It's a single, self-contained feature — not deeply wired into the rest of the app — which makes it cheap to either rebuild with Laravel broadcasting or drop.</p>
+
+      <h3>Edge Functions</h3>
+      <div class="callout warn">
+        <span class="lbl">Source not in this repo</span>
+        <p><code>Mail-Send</code> (invite/reset emails) and <code>user-mgmt</code> (admin add/deactivate/delete-user actions) run as Supabase Edge Functions. Their code only exists inside production's Supabase dashboard — it needs to be pulled out before your dev can port the logic into Laravel controllers.</p>
+      </div>
+    </section>
+
+    <section id="ai">
+      <div class="eyebrow">04</div>
+      <h2>AI features</h2>
+      <p class="dek">Twelve call sites hit Claude directly from the browser. Only one of those features is actually wanted going forward.</p>
+
+      <div class="twrap">
+        <table>
+          <thead><tr><th>Feature</th><th>Function(s)</th><th>Decision</th></tr></thead>
+          <tbody>
+            <tr><td>Smart Merge — combines multiple scanned pages into one clean plan</td><td class="mono dim">runSmartMerge</td><td><span class="tag keep">keep</span> — confirmed by owner</td></tr>
+            <tr><td>Auto room-scan &amp; icon placement</td><td class="mono dim">eaiRunRoomScan, aiAutoMap, aiScanPages</td><td><span class="tag cut">cut</span> — confirmed broken / unused</td></tr>
+            <tr><td>"EliteAI" chat assistant &amp; wizard (proposal → generated plan)</td><td class="mono dim">sendAiChat, runEliteAI, eawHandleProposal, eawGeneratePlans</td><td><span class="tag cut">cut</span> — part of the same placement engine</td></tr>
+            <tr><td>Icon image search (looks up icon art via Claude vision)</td><td class="mono dim">icImgSearch, processIconImage</td><td><span class="tag ask">confirm</span> — not explicitly addressed yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="prose-w" style="margin-top:18px;">Cutting the placement cluster also removes the need to migrate <code>floor_plan_annotations</code>, <code>floor_plan_labels</code>, and <code>ai_placement_history</code> — three fewer tables in the target schema.</p>
+
+      <div class="callout crit">
+        <span class="lbl">Security note — applies regardless of which features stay</span>
+        <p>Every Claude call today runs client-side, using an API key pulled from <code>localStorage</code> (and a shared fallback in <code>app_config</code>) — visible in plain text to anyone who opens devtools. When Smart Merge (and image search, if it stays) moves into Laravel, the call needs to go through a server endpoint that holds the key — this is a real fix to scope, not optional cleanup.</p>
+      </div>
+    </section>
+
+    <section id="debt">
+      <div class="eyebrow">05</div>
+      <h2>Technical debt worth knowing about</h2>
+      <p class="dek">Small discrepancies found while pulling the real schema — none are blockers, but your dev should know they exist before he's confused by them mid-build.</p>
+      <ul class="clean">
+        <li><code>supabase-setup.sql</code> in the repo only defines 2 of the 13 real tables — it's stale and not something to build from, only kept here as a historical artifact.</li>
+        <li>Two tables the client code queries — <code>floor_plan_room_boxes</code> and <code>placement_examples</code> — don't exist in the current production schema. Both belong to the AI placement cluster being cut anyway, so this is moot rather than a bug to chase.</li>
+        <li><code>markup_users.anthropic_key</code> is written to and read by the code, but no such column exists in production — that write has likely been silently failing. Also moot once the cluster using it (placement/chat) is cut.</li>
+        <li><code>markup_projects.client</code> is a legacy free-text field that predates the proper <code>customer_id</code>/<code>location_id</code> relationship — drop it in the target schema.</li>
+      </ul>
+    </section>
+
+    <section id="prepped">
+      <div class="eyebrow">06</div>
+      <h2>Already prepped</h2>
+      <p class="dek">A safe, fully isolated place for your dev to explore the running app without any risk to production.</p>
+      <ul class="clean">
+        <li><b>Production</b> — <code>plans.elitesmarthome.com</code> on IONOS — untouched by any of this work.</li>
+        <li><b>Repo</b> — <a href="https://github.com/EliteworkerSoftware/plans-elite-dev">github.com/EliteworkerSoftware/plans-elite-dev</a>, public, auto-deploys on push.</li>
+        <li><b>Live duplicate</b> — <a href="https://plans-elite-dev.vercel.app">plans-elite-dev.vercel.app</a>, updates within a minute of any push to the repo.</li>
+        <li><b>Isolated Supabase project</b> — separate URL and keys from production; safe to test sign-in, the markup canvas, and admin actions against without touching real customer data.</li>
+        <li><b><code>app.html</code></b> already decomposed into <code>app.html</code> / <code>app.css</code> / <code>app.js</code>, verified working end to end.</li>
+      </ul>
+      <p class="prose-w" style="font-size:13.5px;color:var(--ink-2);">Not yet done: <code>admin.html</code>, <code>index.html</code>, <code>invite.html</code>, and <code>forgot.html</code> are still monolithic single files, and no audit has been done yet for hardcoded root-relative paths that would break if the tool ends up living at a subpath inside eliteworker instead of a domain root.</p>
+    </section>
+
+    <section id="target">
+      <div class="eyebrow">07</div>
+      <h2>Target architecture</h2>
+      <p class="dek">Not a partial bridge — a full swap of one backend for another, browser code included.</p>
+
+      <figure>
+        <svg viewBox="0 0 960 330" role="img" aria-label="Diagram showing the browser client talking to four Supabase services today, and the same browser talking to four Laravel equivalents after the merge, with the realtime presence feature marked as an open decision.">
+          <!-- Panel A: today -->
+          <text x="230" y="26" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="600" letter-spacing="1.5" fill="currentColor">TODAY</text>
+          <rect x="180" y="40" width="100" height="34" rx="6" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="230" y="61" text-anchor="middle" font-family="IBM Plex Sans" font-size="12" fill="currentColor">Browser</text>
+
+          <rect x="40" y="110" width="380" height="180" rx="8" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,4" opacity="0.55"/>
+          <text x="56" y="130" font-family="IBM Plex Mono" font-size="10.5" letter-spacing="0.5" fill="currentColor" opacity="0.7">SUPABASE</text>
+
+          <g font-family="IBM Plex Sans" font-size="11.5">
+            <rect x="55" y="150" width="80" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <text x="95" y="174" text-anchor="middle" fill="currentColor">Postgres</text>
+            <rect x="150" y="150" width="80" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <text x="190" y="174" text-anchor="middle" fill="currentColor">Storage</text>
+            <rect x="245" y="150" width="80" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <text x="285" y="174" text-anchor="middle" fill="currentColor">Realtime</text>
+            <rect x="340" y="150" width="80" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <text x="380" y="174" text-anchor="middle" fill="currentColor">Edge Fn</text>
+          </g>
+
+          <g stroke="currentColor" stroke-width="1.1" fill="none" opacity="0.75">
+            <line x1="215" y1="74" x2="95" y2="150"/>
+            <line x1="222" y1="74" x2="190" y2="150"/>
+            <line x1="238" y1="74" x2="285" y2="150"/>
+            <line x1="245" y1="74" x2="380" y2="150"/>
+          </g>
+          <g font-family="IBM Plex Mono" font-size="9.5" fill="currentColor" opacity="0.8">
+            <text x="128" y="118">queries</text>
+            <text x="196" y="112">PDF I/O</text>
+            <text x="272" y="118">presence</text>
+            <text x="345" y="112">invoke()</text>
+          </g>
+
+          <g font-family="IBM Plex Mono" font-size="10" fill="currentColor" opacity="0.85">
+            <text x="60" y="270">Auth</text>
+            <text x="60" y="286">— separate email/password system</text>
+          </g>
+
+          <!-- divider -->
+          <line x1="480" y1="20" x2="480" y2="310" stroke="currentColor" stroke-width="1" opacity="0.25"/>
+
+          <!-- Panel B: after -->
+          <text x="730" y="26" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="600" letter-spacing="1.5" fill="#2A5FD1" class="afterlabel">AFTER MERGE</text>
+          <rect x="680" y="40" width="100" height="34" rx="6" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="730" y="61" text-anchor="middle" font-family="IBM Plex Sans" font-size="12" fill="currentColor">Browser</text>
+
+          <rect x="540" y="110" width="380" height="180" rx="8" fill="none" stroke="#2A5FD1" class="afterbound" stroke-width="1.4"/>
+          <text x="556" y="130" font-family="IBM Plex Mono" font-size="10.5" letter-spacing="0.5" fill="#2A5FD1" class="afterlabel">ELITEWORKER (LARAVEL)</text>
+
+          <g font-family="IBM Plex Sans" font-size="11">
+            <rect x="555" y="150" width="80" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <text x="595" y="169" text-anchor="middle" fill="currentColor">MySQL /</text>
+            <text x="595" y="182" text-anchor="middle" fill="currentColor">Postgres</text>
+            <rect x="650" y="150" width="80" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <text x="690" y="174" text-anchor="middle" fill="currentColor">Filesystem</text>
+            <rect x="745" y="150" width="80" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="4,3" class="afterbound"/>
+            <text x="785" y="169" text-anchor="middle" fill="currentColor">Broadcast</text>
+            <text x="785" y="182" text-anchor="middle" fill="currentColor">?</text>
+            <rect x="840" y="150" width="80" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <text x="880" y="174" text-anchor="middle" fill="currentColor">Controller</text>
+          </g>
+
+          <g stroke="currentColor" stroke-width="1.1" fill="none" opacity="0.75">
+            <line x1="715" y1="74" x2="595" y2="150"/>
+            <line x1="722" y1="74" x2="690" y2="150"/>
+            <line x1="738" y1="74" x2="785" y2="150" stroke-dasharray="3,3" class="afterbound"/>
+            <line x1="745" y1="74" x2="880" y2="150"/>
+          </g>
+          <g font-family="IBM Plex Mono" font-size="9.5" fill="currentColor" opacity="0.8">
+            <text x="628" y="118">queries</text>
+            <text x="696" y="112">PDF I/O</text>
+            <text x="772" y="118" class="afterlabel">rebuild?</text>
+            <text x="845" y="112">HTTP</text>
+          </g>
+
+          <g font-family="IBM Plex Mono" font-size="10" fill="currentColor" opacity="0.85">
+            <text x="560" y="270">Auth</text>
+            <text x="560" y="286">— eliteworker's existing session (SSO)</text>
+          </g>
+        </svg>
+        <style>
+          .afterbound{ stroke:var(--accent); }
+          .afterlabel{ fill:var(--accent) !important; }
+        </style>
+        <figcaption>Every current Supabase service maps one-to-one onto a Laravel equivalent — the whole backend swaps out, not just the database. The one open item is realtime presence: worth rebuilding with broadcasting, or drop the "who's viewing this" indicator entirely.</figcaption>
+      </figure>
+
+      <figure>
+        <svg viewBox="0 0 900 250" role="img" aria-label="Diagram showing the current Customer, Location, Project, Variant chain, versus the proposed model where Customer and Location move into eliteworker's database and Project links back with a single eliteworker_job_id.">
+          <text x="20" y="24" font-family="IBM Plex Mono" font-size="11" font-weight="600" letter-spacing="1.5" fill="currentColor">TODAY</text>
+          <g font-family="IBM Plex Sans" font-size="12">
+            <rect x="20" y="40" width="110" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <text x="75" y="64" text-anchor="middle" fill="currentColor">Customer</text>
+            <rect x="180" y="40" width="110" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <text x="235" y="64" text-anchor="middle" fill="currentColor">Location</text>
+            <rect x="340" y="40" width="110" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <text x="395" y="64" text-anchor="middle" fill="currentColor">Project</text>
+            <rect x="500" y="40" width="110" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <text x="555" y="64" text-anchor="middle" fill="currentColor">Variant</text>
+          </g>
+          <g stroke="currentColor" stroke-width="1.1" opacity="0.8">
+            <line x1="130" y1="60" x2="180" y2="60" marker-end="url(#arrow)"/>
+            <line x1="290" y1="60" x2="340" y2="60" marker-end="url(#arrow)"/>
+            <line x1="450" y1="60" x2="500" y2="60" marker-end="url(#arrow)"/>
+          </g>
+          <g font-family="IBM Plex Mono" font-size="9.5" fill="currentColor" opacity="0.8">
+            <text x="134" y="52">customer_id</text>
+            <text x="296" y="52">location_id</text>
+            <text x="456" y="52">project_id</text>
+          </g>
+
+          <line x1="0" y1="115" x2="900" y2="115" stroke="currentColor" stroke-width="1" opacity="0.2"/>
+
+          <text x="20" y="140" font-family="IBM Plex Mono" font-size="11" font-weight="600" letter-spacing="1.5" fill="#2A5FD1" class="afterlabel2">AFTER MERGE</text>
+          <g font-family="IBM Plex Sans" font-size="11.5" opacity="0.4">
+            <rect x="20" y="155" width="110" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3,4"/>
+            <text x="75" y="179" text-anchor="middle" fill="currentColor">Customer</text>
+            <rect x="180" y="155" width="110" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3,4"/>
+            <text x="235" y="179" text-anchor="middle" fill="currentColor">Location</text>
+          </g>
+          <text x="75" y="212" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" fill="currentColor" opacity="0.6">moves to eliteworker</text>
+
+          <rect x="340" y="155" width="110" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.3"/>
+          <text x="395" y="179" text-anchor="middle" font-family="IBM Plex Sans" font-size="12" fill="currentColor">Project</text>
+          <rect x="500" y="155" width="110" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.3"/>
+          <text x="555" y="179" text-anchor="middle" font-family="IBM Plex Sans" font-size="12" fill="currentColor">Variant</text>
+          <line x1="450" y1="175" x2="500" y2="175" stroke="currentColor" stroke-width="1.1" opacity="0.8" marker-end="url(#arrow)"/>
+          <text x="456" y="167" font-family="IBM Plex Mono" font-size="9.5" fill="currentColor" opacity="0.8">project_id</text>
+
+          <rect x="680" y="140" width="190" height="70" rx="8" fill="none" stroke="#2A5FD1" class="afterbound2" stroke-width="1.4" stroke-dasharray="4,3"/>
+          <text x="694" y="158" font-family="IBM Plex Mono" font-size="10" fill="#2A5FD1" class="afterlabel2">ELITEWORKER DB</text>
+          <rect x="700" y="168" width="80" height="30" rx="5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <text x="740" y="187" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" fill="currentColor">Job</text>
+
+          <line x1="450" y1="185" x2="700" y2="183" stroke="#2A5FD1" class="afterbound2" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+          <text x="470" y="204" font-family="IBM Plex Mono" font-size="9.5" fill="#2A5FD1" class="afterlabel2">eliteworker_job_id</text>
+
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+            </marker>
+            <marker id="arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#2A5FD1" class="afterbound2"/>
+            </marker>
+          </defs>
+        </svg>
+        <style>.afterbound2{stroke:var(--accent);fill:var(--accent);}.afterlabel2{fill:var(--accent) !important;}</style>
+        <figcaption><b>Customer</b> and <b>Location</b> move into eliteworker's own database entirely — no mirrored copies. <b>Project</b> links back with a single <code>eliteworker_job_id</code> instead of two local foreign keys.</figcaption>
+      </figure>
+    </section>
+
+    <section id="checklist">
+      <div class="eyebrow">08</div>
+      <h2>Scoping checklist</h2>
+      <p class="dek">What your dev needs answered before "how long will this take" has a real number behind it.</p>
+      <div class="checklist">
+        <div class="checkitem"><div class="num">1</div><div><h4>File storage backend</h4><p>Does eliteworker already store files on S3 (or similar), or local disk? Plan PDFs can be large — this decision shapes the storage migration, not just a config swap.</p></div></div>
+        <div class="checkitem"><div class="num">2</div><div><h4>Realtime presence — rebuild or drop</h4><p>The "who's viewing this plan" indicator is the one piece without an obvious 1:1 Laravel equivalent. Worth the broadcasting setup, or cut?</p></div></div>
+        <div class="checkitem"><div class="num">3</div><div><h4>Icon image search — keep or cut</h4><p>Not addressed by either AI decision made so far. A small, separable feature — confirm before it's scoped in or out.</p></div></div>
+        <div class="checkitem"><div class="num">4</div><div><h4>Who owns the Anthropic key going forward</h4><p>Smart Merge (and image search, if kept) needs its API call proxied through a Laravel endpoint instead of running from the browser. Someone needs to own that key and its billing.</p></div></div>
+        <div class="checkitem"><div class="num">5</div><div><h4>Does eliteworker's user model have roles already</h4><p>The tool distinguishes admin vs. tech. Confirm whether eliteworker's existing permission system already covers this or needs extending.</p></div></div>
+        <div class="checkitem"><div class="num">6</div><div><h4>Edge function source</h4><p><code>Mail-Send</code> and <code>user-mgmt</code> need to be pulled from production's Supabase dashboard before their logic can be ported — they don't exist anywhere in this repo.</p></div></div>
+        <div class="checkitem"><div class="num">7</div><div><h4>Target timeline</h4><p>Backlog item, or does this have a date attached? Changes whether a full rewrite or an incremental approach makes more sense.</p></div></div>
+      </div>
+    </section>
+
+    <section id="appendix" style="margin-bottom:0;padding-bottom:0;border-bottom:none;">
+      <div class="eyebrow">Appendix</div>
+      <h2>Full column-level schema</h2>
+      <p class="dek">Pulled directly from production via <code>information_schema</code>, Aug 30 2026. Reference only — expand a table to see every column.</p>
+
+      <details>
+        <summary>markup_customers <span class="cnt">5 columns · drop</span></summary>
+        <div class="twrap"><table><thead><tr><th>Column</th><th>Type</th><th>Nullable</th><th>Default</th></tr></thead><tbody>
+          <tr><td class="mono">id</td><td class="mono dim">uuid</td><td>no</td><td class="mono dim">gen_random_uuid()</td></tr>
+          <tr><td class="mono">name</td><td class="mono dim">text</td><td>no</td><td class="dim">—</td></tr>
+          <tr><td class="mono">created_by</td><td class="mono dim">uuid</td><td>yes</td><td class="dim">—</td></tr>
+          <tr><td class="mono">created_at</td><td class="mono dim">timestamptz</td><td>yes</td><td class="mono dim">now()</td></tr>
+          <tr><td class="mono">archived</td><td class="mono dim">boolean</td><td>yes</td><td class="mono dim">false</td></tr>
+          <tr><td class="mono">customer_type</td><td class="mono dim">text</td><td>yes</td><td class="mono dim">'individual'</td></tr>
+        </tbody></table></div>
+      </details>
+
+      <details>
+        <summary>markup_locations <span class="cnt">5 columns · drop</span></summary>
+        <div class="twrap"><table><thead><tr><th>Column</th><th>Type</th><th>Nullable</th><th>Default</th></tr></thead><tbody>
+          <tr><td class="mono">id</td><td class="mono dim">uuid</td><td>no</td><td class="mono dim">gen_random_uuid()</td></tr>
+          <tr><td class="mono">customer_id</td><td class="mono dim">uuid</td><td>yes</td><td class="dim">—</td></tr>
+          <tr><td class="mono">address</td><td class="mono dim">text</td><td>no</td><td class="dim">—</td></tr>
+          <tr><td class="mono">name</td><td class="mono dim">text</td><td>yes</td><td class="dim">—</td></tr>
+          <tr><td class="mono">created_at</td><td class="mono dim">timestamptz</td><td>yes</td><td class="mono dim">now()</td></tr>
+        </tbody></table></div>
+      </details>
+
+      <details>
+        <summary>markup_projects <span class="cnt">13 columns · keep, reshaped</span></summary>
+        <div class="twrap"><table><thead><tr><th>Column</th><th>Type</th><th>Nullable</th><th>Default</th></tr></thead><tbody>
+          <tr><td class="mono">id</td><td class="mono dim">uuid</td><td>no</td><td class="mono dim">gen_random_uuid()</td></tr>
+          <tr><td class="mono">name</td><td class="mono dim">text</td><td>no</td><td class="dim">—</td></tr>
+          <tr><td class="mono">client</td><td class="mono dim">text</td><td>yes</td><td class="dim">— legacy, drop</td></tr>
+          <tr><td class="mono">created_by</td><td class="mono dim">uuid</td><td>yes</td><td class="dim">—</td></tr>
+          <tr><td class="mono">annotations</td><td class="mono dim">jsonb</td><td>yes</td><td class="mono dim">{"icons":[],"strokes":[]}</td></tr>
+          <tr><td class="mono">created_at</td><td class="mono dim">timestamptz</td><td>yes</td><td class="mono dim">now()</td></tr>
+          <tr><td class="mono">updated_at</td><td class="mono dim">timestamptz</td><td>yes</td><td class="mono dim">now()</td></tr>
+          <tr><td class="mono">archived</td><td class="mono dim">boolean</td><td>yes</td><td class="mono dim">false</td></tr>
+          <tr><td class="mono">ewm_data</td><td class="mono dim">jsonb</td><td>yes</td><td class="dim">—</td></tr>
+          <tr><td class="mono">customer_id</td><td class="mono dim">uuid</td><td>yes</td><td class="dim">— drop</td></tr>
+          <tr><td class="mono">location_id</td><td class="mono dim">uuid</td><td>yes</td><td class="dim">— drop</td></tr>
+          <tr><td class="mono">job_type</td><td class="mono dim">text</td><td>yes</td><td class="dim">—</td></tr>
+          <tr><td class="mono">pdf_filename</td><td class="mono dim">text</td><td>yes</td><td class="dim">—</td></tr>
+          <tr><td class="mono">eliteworker_job_id</td><td class="mono dim">text</td><td>yes</td><td class="dim">— becomes the required key</td></tr>
+          <tr><td class="mono">pdf_storage_path</td><td class="mono dim">text</td><td>yes</td><td class="dim">—</td></tr>
+        </tbody></table></div>
+      </details>
+
+      <details>
+        <summary>markup_variants <span class="cnt">8 columns · keep</span></summary>
+        <div class="twrap"><table><thead><tr><th>Column</th><th>Type</th><th>Nullable</th><th>Default</th></tr></thead><tbody>
+          <tr><td class="mono">id</td><td class="mono dim">uuid</td><td>no</td><td class="mono dim">gen_random_uuid()</td></tr>
+          <tr><td class="mono">project_id</td><td class="mono dim">uuid</td><td>yes</td><td class="dim">—</td></tr>
+          <tr><td class="mono">tab_type</td><td class="mono dim">text</td><td>yes</td><td class="mono dim">'single'</td></tr>
+          <tr><td class="mono">name</td><td class="mono dim">text</td><td>no</td><td class="dim">—</td></tr>
+          <tr><td class="mono">pdf_storage_path</td><td class="mono dim">text</td><td>yes</td><td class="dim">—</td></tr>
+          <tr><td class="mono">ewm_data</td><td class="mono dim">jsonb</td><td>yes</td><td class="dim">—</td></tr>
+          <tr><td class="mono">created_by</td><td class="mono dim">uuid</td><td>yes</td><td class="dim">—</td></tr>
+          <tr><td class="mono">created_at</td><td class="mono dim">timestamptz</td><td>yes</td><td class="mono dim">now()</td></tr>
+        </tbody></table></div>
+      </details>
+
+      <details>
+        <summary>markup_users <span class="cnt">9 columns · drop</span></summary>
+        <div class="twrap"><table><thead><tr><th>Column</th><th>Type</th><th>Nullable</th><th>Default</th></tr></thead><tbody>
+          <tr><td class="mono">id</td><td class="mono dim">uuid</td><td>no</td><td class="dim">—</td></tr>
+          <tr><td class="mono">email</td><td class="mono dim">text</td><td>no</td><td class="dim">—</td></tr>
+          <tr><td class="mono">full_name</td><td class="mono dim">text</td><td>yes</td><td class="dim">—</td></tr>
+          <tr><td class="mono">role</td><td class="mono dim">text</td><td>yes</td><td class="mono dim">'tech'</td></tr>
+          <tr><td class="mono">created_at</td><td class="mono dim">timestamptz</td><td>yes</td><td class="mono dim">now()</td></tr>
+          <tr><td class="mono">custom_icons</td><td class="mono dim">text</td><td>yes</td><td class="dim">—</td></tr>
+          <tr><td class="mono">status</td><td class="mono dim">text</td><td>yes</td><td class="mono dim">'active'</td></tr>
+          <tr><td class="mono">invited_by</td><td class="mono dim">uuid</td><td>yes</td><td class="dim">—</td></tr>
+          <tr><td class="mono">invited_at</td><td class="mono dim">timestamptz</td><td>yes</td><td class="dim">—</td></tr>
+        </tbody></table></div>
+      </details>
+
+      <details>
+        <summary>markup_invites <span class="cnt">7 columns · drop</span></summary>
+        <div class="twrap"><table><thead><tr><th>Column</th><th>Type</th><th>Nullable</th><th>Default</th></tr></thead><tbody>
+          <tr><td class="mono">id</td><td class="mono dim">uuid</td><td>no</td><td class="mono dim">gen_random_uuid()</td></tr>
+          <tr><td class="mono">email</td><td class="mono dim">text</td><td>no</td><td class="dim">—</td></tr>
+          <tr><td class="mono">full_name</td><td class="mono dim">text</td><td>yes</td><td class="dim">—</td></tr>
+          <tr><td class="mono">role</td><td class="mono dim">text</td><td>no</td><td class="mono dim">'staff'</td></tr>
+          <tr><td class="mono">status</td><td class="mono dim">text</td><td>no</td><td class="mono dim">'pending'</td></tr>
+          <tr><td class="mono">invited_by</td><td class="mono dim">uuid</td><td>yes</td><td class="dim">—</td></tr>
+          <tr><td class="mono">invited_at</td><td class="mono dim">timestamptz</td><td>yes</td><td class="mono dim">now()</td></tr>
+        </tbody></table></div>
+      </details>
+
+      <details>
+        <summary>company_icons <span class="cnt">7 columns · keep minus placement_rules</span></summary>
+        <div class="twrap"><table><thead><tr><th>Column</th><th>Type</th><th>Nullable</th><th>Default</th></tr></thead><tbody>
+          <tr><td class="mono">id</td><td class="mono dim">text</td><td>no</td><td class="dim">—</td></tr>
+          <tr><td class="mono">name</td><td class="mono dim">text</td><td>no</td><td class="dim">—</td></tr>
+          <tr><td class="mono">cat</td><td class="mono dim">text</td><td>no</td><td class="dim">—</td></tr>
+          <tr><td class="mono">f</td><td class="mono dim">text</td><td>no</td><td class="dim">—</td></tr>
+          <tr><td class="mono">created_by</td><td class="mono dim">uuid</td><td>yes</td><td class="dim">—</td></tr>
+          <tr><td class="mono">created_at</td><td class="mono dim">timestamptz</td><td>yes</td><td class="mono dim">now()</td></tr>
+          <tr><td class="mono">placement_rules</td><td class="mono dim">jsonb</td><td>yes</td><td class="dim">— AI-placement only, drop</td></tr>
+        </tbody></table></div>
+      </details>
+
+      <details>
+        <summary>app_config <span class="cnt">2 columns · keep, reshaped</span></summary>
+        <div class="twrap"><table><thead><tr><th>Column</th><th>Type</th><th>Nullable</th><th>Default</th></tr></thead><tbody>
+          <tr><td class="mono">key</td><td class="mono dim">text</td><td>no</td><td class="dim">—</td></tr>
+          <tr><td class="mono">value</td><td class="mono dim">text</td><td>no</td><td class="dim">—</td></tr>
+        </tbody></table></div>
+      </details>
+
+      <details>
+        <summary>AI placement cluster — being removed <span class="cnt">3 tables</span></summary>
+        <div class="twrap"><table><thead><tr><th>Table</th><th>Columns</th></tr></thead><tbody>
+          <tr><td class="mono">floor_plan_annotations</td><td class="mono dim">id, plan_filename, page_num, label_id, x1, y1, x2, y2, notes, created_by, created_at</td></tr>
+          <tr><td class="mono">floor_plan_labels</td><td class="mono dim">id, category, name, color, sort_order</td></tr>
+          <tr><td class="mono">ai_placement_history</td><td class="mono dim">id, icon_id, project_type, floor_count, rooms, qty_placed, created_at</td></tr>
+        </tbody></table></div>
+      </details>
+
+    </section>
+
+  </main>
+</div>
