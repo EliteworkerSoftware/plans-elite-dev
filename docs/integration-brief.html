@@ -228,6 +228,7 @@
       <li><a href="#ai">AI features</a></li>
       <li><a href="#debt">Technical debt</a></li>
       <li><a href="#prepped">Already prepped</a></li>
+      <li><a href="#chrome">What ships vs. what's chrome</a></li>
       <li><a href="#target">Target architecture</a></li>
       <li><a href="#checklist">Scoping checklist</a></li>
       <li><a href="#appendix">Appendix: full schema</a></li>
@@ -399,8 +400,34 @@
       <p class="prose-w" style="font-size:13.5px;color:var(--ink-2);">Not yet done: <code>admin.html</code>, <code>index.html</code>, <code>invite.html</code>, and <code>forgot.html</code> are still monolithic single files, and no audit has been done yet for hardcoded root-relative paths that would break if the tool ends up living at a subpath inside eliteworker instead of a domain root.</p>
     </section>
 
-    <section id="target">
+    <section id="chrome">
       <div class="eyebrow">07</div>
+      <h2>What ships vs. what's chrome</h2>
+      <p class="dek">Owner's call: strip the standalone-app shell, keep the editing engine untouched.</p>
+      <p class="prose-w">Today's <code>app.html</code> menu bar is built like a desktop application — a logo that links to a project dashboard, <b>File / Edit / View</b> dropdown menus, a save-status indicator, a theme toggle, and an account badge. Inside eliteworker, that entire top bar is redundant: eliteworker's own shell already provides navigation, theming, and account context. None of it should be rebuilt inside the embedded tool.</p>
+      <p class="prose-w">The "dashboard" that <code>File → Open Project</code> currently leads to isn't a separate page — it's an internal view inside <code>app.html</code> that lists every markup project across every customer (<code>loadJobDashboard()</code>). That browsing view goes away entirely: when eliteworker launches the tool from a specific job, it's already scoped to that one job — there's nothing to browse.</p>
+
+      <div class="twrap">
+        <table>
+          <thead><tr><th>Piece</th><th>Fate</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Menu bar — logo, File / Edit / View dropdowns, theme toggle, account badge</td><td><span class="tag cut">strip</span></td><td>eliteworker's shell already covers navigation, theming, account</td></tr>
+            <tr><td>Project dashboard (multi-customer project list)</td><td><span class="tag cut">strip</span></td><td>tool launches pre-scoped to one job via <code>eliteworker_job_id</code> — no list to browse</td></tr>
+            <tr><td>"New Project" modal's customer name / company / address fields</td><td><span class="tag cut">strip</span></td><td>eliteworker already knows the customer and job — no need to re-enter</td></tr>
+            <tr><td>PDF upload → straight into the canvas</td><td><span class="tag keep">keep</span></td><td>this becomes the entry point: launch tool, upload the plan, start marking it up</td></tr>
+            <tr><td>Saving / variant logic — including the auto-prompt to save as a new name on first icon placement</td><td><span class="tag keep">keep, unchanged</span></td><td>owner confirmed this works well as-is</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout info">
+        <span class="lbl">Not a feature cut — a presentation cut</span>
+        <p>Commands living in the File/Edit/View dropdowns today — Undo/Redo, zoom, Export to PDF, Save As, Storage Manager — still need a home in the embedded UI. Removing the desktop-style menu bar doesn't mean removing what it does; it means those actions move into the canvas toolbar itself (several already live there) or into whatever chrome eliteworker provides around the embedded panel.</p>
+      </div>
+    </section>
+
+    <section id="target">
+      <div class="eyebrow">08</div>
       <h2>Target architecture</h2>
       <p class="dek">Not a partial bridge — a full swap of one backend for another, browser code included.</p>
 
@@ -557,7 +584,7 @@
     </section>
 
     <section id="checklist">
-      <div class="eyebrow">08</div>
+      <div class="eyebrow">09</div>
       <h2>Scoping checklist</h2>
       <p class="dek">What your dev needs answered before "how long will this take" has a real number behind it.</p>
       <div class="checklist">
@@ -568,6 +595,7 @@
         <div class="checkitem"><div class="num">5</div><div><h4>Does eliteworker's user model have roles already</h4><p>The tool distinguishes admin vs. tech. Confirm whether eliteworker's existing permission system already covers this or needs extending.</p></div></div>
         <div class="checkitem"><div class="num">6</div><div><h4>Edge function source</h4><p><code>Mail-Send</code> and <code>user-mgmt</code> need to be pulled from production's Supabase dashboard before their logic can be ported — they don't exist anywhere in this repo.</p></div></div>
         <div class="checkitem"><div class="num">7</div><div><h4>Target timeline</h4><p>Backlog item, or does this have a date attached? Changes whether a full rewrite or an incremental approach makes more sense.</p></div></div>
+        <div class="checkitem"><div class="num">8</div><div><h4>Where do Undo/Redo, zoom, and Export to PDF live</h4><p>Stripping the File/Edit/View menu bar (see <a href="#chrome">What ships vs. what's chrome</a>) still leaves those commands needing a home — in eliteworker's own panel chrome, or rebuilt into the canvas toolbar.</p></div></div>
       </div>
     </section>
 
